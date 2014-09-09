@@ -42,6 +42,13 @@ bin/hubot -a chatwork
 
 So Chatwork API will return `501` error response.
 
+Modify ``node_modules/hubot/src/listener.coffee`` when hubot can't POST to ChatWork.
+```diff
+  constructor: (@robot, @regex, @callback) ->
+-   if message instanceof TextMessage
+-     message.match @regex
++   message.match? @regex
+```
 
 ## License
 The MIT License. See `LICENSE` file.

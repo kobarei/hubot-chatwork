@@ -8,14 +8,16 @@ TextMessage   = (require 'hubot').TextMessage
 class Chatwork extends Adapter
   # override
   send: (envelope, strings...) ->
+    console.log 'SENDING'
     for string in strings
       @bot.Room(envelope.room).Messages().create string, (err, data) =>
         @robot.logger.error "Chatwork send error: #{err}" if err?
 
   # override
   reply: (envelope, strings...) ->
+    console.log 'REPLYING'
     @send envelope, strings.map((str) ->
-      "[To:#{envelope.user.id}] #{envelope.user.name}さん\n#{str}")...
+      str)...
 
   # override
   run: ->
@@ -27,14 +29,15 @@ class Chatwork extends Adapter
     bot = new ChatworkStreaming(options, @robot)
 
     for roomId in bot.rooms
-      bot.Room(roomId).Messages().listen()
+      bot.Room(roomId).Tasks().listen()
 
-    bot.on 'message', (roomId, id, account, body, sendAt, updatedAt) =>
+    bot.on 'message', (roomId, messageId, account, body, sendAt, updatedAt) =>
+      console.log body
       user = @robot.brain.userForId account.account_id,
         name: account.name
         avatarImageUrl: account.avatar_image_url
         room: roomId
-      @receive new TextMessage user, body, id
+      @receive new TextMessage user, body, messageId
 
     @bot = bot
 
@@ -130,7 +133,10 @@ class ChatworkStreaming extends EventEmitter
         @get "#{baseUrl}/messages", "", callback
 
       create: (text, callback) =>
-        body = "body=#{text}"
+        params = []
+        params.push "body=#{text}"
+        body = params.join '&'
+        body = body.replace(/\s/g, '+')
         @post "#{baseUrl}/messages", body, callback
 
       listen: =>
@@ -154,11 +160,9 @@ class ChatworkStreaming extends EventEmitter
         @get "#{baseUrl}/messages/#{mid}", "", callback
 
     Tasks: =>
-      show: (opts, callback) =>
+      show: (callback) =>
         params = []
-        params.push "account_id=#{opts.account}" if opts.account?
-        params.push "assigned_by_account_id=#{opts.assignedBy}" if opts.assignedBy?
-        params.push "status=#{opts.status}" if opts.status?
+        params.push "status=open"
         body = params.join '&'
         @get "#{baseUrl}/tasks", body, callback
 
@@ -169,6 +173,22 @@ class ChatworkStreaming extends EventEmitter
         params.push "limit=#{opts.limit}" if opts.limit?
         body = params.join '&'
         @post "#{baseUrl}/tasks", body, callback
+
+      listen: =>
+        lastTask = 0
+        setInterval =>
+          @Room(id).Tasks().show (err, tasks) =>
+            for task in tasks
+              if lastTask < task.task_id
+                @emit 'message',
+                  id,
+                  task.task_id,
+                  task.account,
+                  task.body,
+                  task.send_time,
+                  task.update_time
+                lastTask = task.task_id
+        , 1000 / (@rate / (60 * 60))
 
     Task: (tid) =>
       show: (callback) =>
@@ -204,6 +224,7 @@ class ChatworkStreaming extends EventEmitter
     headers =
       "Host"           : @host
       "X-ChatWorkToken": @token
+      "Content-Type"   : "text/plain"
 
     options =
       "agent"  : false
@@ -213,8 +234,10 @@ class ChatworkStreaming extends EventEmitter
       "method" : method
       "headers": headers
 
-    body = new Buffer body
+    # body = new Buffer body
     options.headers["Content-Length"] = body.length
+    if body.length > 0
+      options.path += "?#{body}"
 
     request = HTTPS.request options, (response) ->
       data = ""
@@ -239,8 +262,7 @@ class ChatworkStreaming extends EventEmitter
         logger.error "Chatwork HTTPS response error: #{err}"
         callback err, {}
 
-    request.end body, 'binary'
+    request.end body
 
     request.on "error", (err) ->
       logger.error "Chatwork request error: #{err}"
-

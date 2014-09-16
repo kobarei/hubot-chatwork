@@ -1,23 +1,20 @@
 HTTPS          = require 'https'
 {EventEmitter} = require 'events'
 
-Robot         = (require 'hubot').Robot
-Adapter       = (require 'hubot').Adapter
-TextMessage   = (require 'hubot').TextMessage
+{Robot, Adapter, TextMessage} = require 'hubot'
 
 class Chatwork extends Adapter
   # override
   send: (envelope, strings...) ->
-    console.log 'SENDING'
     for string in strings
       @bot.Room(envelope.room).Messages().create string, (err, data) =>
         @robot.logger.error "Chatwork send error: #{err}" if err?
 
   # override
   reply: (envelope, strings...) ->
-    console.log 'REPLYING'
+    echo envelope
     @send envelope, strings.map((str) ->
-      str)...
+      "[To:#{envelope.user.id}]+#{envelope.user.name}さん\n#{str}")...
 
   # override
   run: ->
@@ -25,6 +22,7 @@ class Chatwork extends Adapter
       token: process.env.HUBOT_CHATWORK_TOKEN
       rooms: process.env.HUBOT_CHATWORK_ROOMS
       apiRate: process.env.HUBOT_CHATWORK_API_RATE
+      hubot_id: process.env.HUBOT_CHATWORK_ID
 
     bot = new ChatworkStreaming(options, @robot)
 
@@ -32,7 +30,13 @@ class Chatwork extends Adapter
       bot.Room(roomId).Tasks().listen()
 
     bot.on 'message', (roomId, messageId, account, body, sendAt, updatedAt) =>
-      console.log body
+      user = @robot.brain.userForId account.account_id,
+        name: account.name
+        avatarImageUrl: account.avatar_image_url
+        room: roomId
+      @receive new TextMessage user, body, messageId
+
+    bot.on 'task', (roomId, messageId, account, body, sendAt, updatedAt) =>
       user = @robot.brain.userForId account.account_id,
         name: account.name
         avatarImageUrl: account.avatar_image_url
@@ -55,6 +59,7 @@ class ChatworkStreaming extends EventEmitter
 
     @token = options.token
     @rooms = options.rooms.split ','
+    @hubot_id = options.hubot_id
     @host = 'api.chatwork.com'
     @rate = parseInt options.apiRate, 10
 
@@ -140,19 +145,19 @@ class ChatworkStreaming extends EventEmitter
         @post "#{baseUrl}/messages", body, callback
 
       listen: =>
-        lastMessage = 0
+        lastTask = 0
         setInterval =>
-          @Room(id).Messages().show (err, messages) =>
-            for message in messages
-              if lastMessage < message.message_id
-                @emit 'message',
+          @Room(id).Messages().show (err, tasks) =>
+            for task in tasks
+              if lastTask < task.message_id and task.account.account_id is @hubot_id
+                @emit 'task',
                   id,
-                  message.message_id,
-                  message.account,
-                  message.body,
-                  message.send_time,
-                  message.update_time
-                lastMessage = message.message_id
+                  task.message_id,
+                  task.account,
+                  task.body,
+                  task.send_time,
+                  task.update_time
+                lastTask = task.message_id
         , 1000 / (@rate / (60 * 60))
 
     Message: (mid) =>
@@ -180,7 +185,7 @@ class ChatworkStreaming extends EventEmitter
           @Room(id).Tasks().show (err, tasks) =>
             for task in tasks
               if lastTask < task.task_id
-                @emit 'message',
+                @emit 'task',
                   id,
                   task.task_id,
                   task.account,
@@ -234,8 +239,8 @@ class ChatworkStreaming extends EventEmitter
       "method" : method
       "headers": headers
 
-    # body = new Buffer body
     options.headers["Content-Length"] = body.length
+
     if body.length > 0
       options.path += "?#{body}"
 

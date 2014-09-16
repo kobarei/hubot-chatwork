@@ -149,7 +149,7 @@ class ChatworkStreaming extends EventEmitter
         setInterval =>
           @Room(id).Messages().show (err, tasks) =>
             for task in tasks
-              if lastTask < task.message_id and task.account.account_id is @hubot_id
+              if lastTask < task.message_id and "#{task.account.account_id}" is @hubot_id
                 @emit 'task',
                   id,
                   task.message_id,
@@ -184,7 +184,7 @@ class ChatworkStreaming extends EventEmitter
         setInterval =>
           @Room(id).Tasks().show (err, tasks) =>
             for task in tasks
-              if lastTask < task.task_id
+              if lastTask < task.task_id and "#{task.account.account_id}" is @hubot_id and Math.round(+new Date()/1000) < task.limit_time
                 @emit 'task',
                   id,
                   task.task_id,

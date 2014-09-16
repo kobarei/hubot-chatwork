@@ -141,7 +141,7 @@ class ChatworkStreaming extends EventEmitter
         params = []
         params.push "body=#{text}"
         body = params.join '&'
-        body = body.replace(/\s/g, '+')
+        body = body.replace(/\ /g, '+')
         @post "#{baseUrl}/messages", body, callback
 
       listen: =>

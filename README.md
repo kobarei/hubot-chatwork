@@ -26,8 +26,11 @@ npm install
 ```sh
 export HUBOT_CHATWORK_TOKEN="DEADBEEF" # see http://developer.chatwork.com/ja/authenticate.html
 export HUBOT_CHATWORK_ROOMS="123,456"   # comma separated
-export HUBOT_CHATWORK_API_RATE="350"   # request per hour
 export HUBOT_CHATWORK_ID="123456"   # chatwork ID for hubot task
+export HUBOT_GITHUB_TOKEN="**************************"
+export HUBOT_GITHUB_OWNER="kobarei"
+export HUBOT_GITHUB_REPOS="hubot-chatwork"
+export HUBOT_API_RATE="360"
 ```
 
 4. Run hubot with chatwork adapter.

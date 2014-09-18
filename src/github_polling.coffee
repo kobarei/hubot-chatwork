@@ -24,30 +24,32 @@ class GithubPolling extends EventEmitter
 
       polling: (callback) =>
         @Repos(repo_name).Commits().fetch (err, commits) =>
-          messages = {}
+          message = {}
+          lastCommit = @robot.brain.get repo_name
+          if lastCommit == null
+            @robot.brain.set repo_name, commits[1].commit.committer.date
+            @robot.brain.save()
+
           for commit in commits.reverse()
+            # initialize message component
+            message["user"] = commit.committer.login if message["user"] is undefined
+            message["msg"] = "" if message["msg"] is undefined
+
             lastCommit = @robot.brain.get repo_name
-            if lastCommit == null
+            if lastCommit < commit.commit.committer.date
+              # add commit message
+              message["msg"] += "  * #{commit.commit.message}: ( #{commit.html_url} )\n"
               lastCommit = commit.commit.committer.date
-            else
-              while lastCommit < commit.commit.committer.date
-                if messages[commit.committer.login] == undefined
-                  messages[commit.committer.login] = {}
-                  messages[commit.committer.login]["count"] = 0
-                  messages[commit.committer.login]["msg"] = ""
-                messages[commit.committer.login]["count"] += 1
-                messages[commit.committer.login]["msg"] += "  * #{commit.commit.message}: ( #{commit.html_url} )\n"
-                lastCommit = commit.commit.committer.date
+
             @robot.brain.set repo_name, lastCommit
             @robot.brain.save()
 
-          if Object.keys(messages).length
-            for login_id, v of messages
-              msg = "#{login_id}さんが#{repo_name}に#{v.count}回コミットしました.\n" + v.msg
-              @emit 'commit',
-                ch_room_id
-                repo_name
-                msg
+          if message["msg"] != ""
+            msg = "#{message["user"]}さんが#{repo_name}にコミットしました.\n" + message["msg"]
+            @emit 'commit',
+              ch_room_id
+              repo_name
+              msg
 
   get: (path, body, callback) ->
     @request 'GET', path, body, callback

@@ -10,10 +10,8 @@ class GithubPolling extends EventEmitter
 
     @token = options.github_token
     @owner = options.github_owner
-    @repos = options.github_repos.split ','
     @rate = parseInt options.apiRate, 10
     @host = 'api.github.com'
-    @lastCommit = ''
 
     unless @rate > 0
       @robot.logger.error 'API rate must be greater then 0'
@@ -26,23 +24,37 @@ class GithubPolling extends EventEmitter
 
       polling: (callback) =>
         @Repos(repo_name).Commits().fetch (err, commits) =>
-          for commit in commits
-            if @lastCommit < commit.commit.committer.date
+          messages = {}
+          for commit in commits.reverse()
+            lastCommit = @robot.brain.get repo_name
+            if lastCommit == null
+              lastCommit = commit.commit.committer.date
+            else
+              while lastCommit < commit.commit.committer.date
+                if messages[commit.committer.login] == undefined
+                  messages[commit.committer.login] = {}
+                  messages[commit.committer.login]["count"] = 0
+                  messages[commit.committer.login]["msg"] = ""
+                messages[commit.committer.login]["count"] += 1
+                messages[commit.committer.login]["msg"] += "  * #{commit.commit.message}: ( #{commit.html_url} )\n"
+                lastCommit = commit.commit.committer.date
+            @robot.brain.set repo_name, lastCommit
+            @robot.brain.save()
+
+          if Object.keys(messages).length
+            for login_id, v of messages
+              msg = "#{login_id}さんが#{repo_name}に#{v.count}回コミットしました.\n" + v.msg
               @emit 'commit',
                 ch_room_id
                 repo_name
-                commit
-              @lastCommit = commit.commit.committer.date
+                msg
 
   get: (path, body, callback) ->
     @request 'GET', path, body, callback
 
-  post: (path, body, callback) ->
-    @request "POST", path, body, callback
-
   request: (method, path, body, callback) ->
     logger = @robot.logger
-    console.log "github #{method} #{path} #{body}"
+    # console.log "github #{method} #{path} #{body}"
 
     headers =
       "Host": @host

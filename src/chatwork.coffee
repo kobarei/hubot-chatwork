@@ -30,10 +30,13 @@ class Chatwork extends Adapter
     ch_bot = new ChatworkStreaming options, @robot
     gh_bot = new GithubPolling options, @robot
 
+    ch_rooms = options.rooms.split ','
+    gh_repos = options.github_repos.split ','
+
     setInterval =>
-      for room_id in ch_bot.rooms
+      for room_id in ch_rooms
         ch_bot.Room(room_id).Tasks().listen()
-        for repo_name in gh_bot.repos
+        for repo_name in gh_repos
           gh_bot.Repos(repo_name, room_id).Commits().polling()
 
     , 1000 / (options.apiRate / (60 * 60))
@@ -45,17 +48,11 @@ class Chatwork extends Adapter
         room: room_id
       @receive new TextMessage user, body, messageId
 
-    gh_bot.on 'commit', (room_id, repo, commit) =>
+    gh_bot.on 'commit', (room_id, repo, msg) =>
       envelope =
         user:
-          id: commit.committer.id,
-          name: commit.committer.login
           room: room_id
-        text: ""
-        id: commit.sha
-        done: false
         room: room_id
-      msg = "#{commit.committer.login}さんが#{repo}にコミットしました.\n #{commit.commit.message}: ( #{commit.html_url} )"
       @send envelope, [msg]
 
     @ch_bot = ch_bot

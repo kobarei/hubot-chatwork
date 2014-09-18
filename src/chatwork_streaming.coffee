@@ -9,7 +9,6 @@ class ChatworkStreaming extends EventEmitter
       process.exit 1
 
     @token    = options.chatwork_token
-    @rooms    = options.rooms.split ','
     @hubot_id = options.hubot_id
     @host     = 'api.chatwork.com'
     @rate     = parseInt options.apiRate, 10
@@ -91,6 +90,7 @@ class ChatworkStreaming extends EventEmitter
 
       create: (text, callback) =>
         params = []
+        text = encodeURIComponent(text).replace(/%20/g, '+')
         params.push "body=#{text}"
         body = params.join '&'
         body = body.replace(/\s/g, '+')
@@ -171,7 +171,7 @@ class ChatworkStreaming extends EventEmitter
 
   request: (method, path, body, callback) ->
     logger = @robot.logger
-    console.log "chatwork #{method} #{path} #{body}"
+    # console.log "chatwork #{method} #{path} #{body}"
 
     headers =
       "Host"           : @host

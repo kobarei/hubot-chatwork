@@ -27,7 +27,7 @@ class GithubPolling extends EventEmitter
           message = {}
           lastCommit = @robot.brain.get repo_name
           if lastCommit == null
-            @robot.brain.set repo_name, commits[1].commit.committer.date
+            @robot.brain.set repo_name, commits[0].commit.committer.date
             @robot.brain.save()
 
           for commit in commits.reverse()

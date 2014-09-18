@@ -32,12 +32,12 @@ class GithubPolling extends EventEmitter
 
           for commit in commits.reverse()
             # initialize message component
-            message["user"] = commit.committer.login if message["user"] is undefined
             message["msg"] = "" if message["msg"] is undefined
 
             lastCommit = @robot.brain.get repo_name
             if lastCommit < commit.commit.committer.date
               # add commit message
+              message["user"] = commit.committer.login
               message["msg"] += "  * #{commit.commit.message}: ( #{commit.html_url} )\n"
               lastCommit = commit.commit.committer.date
 

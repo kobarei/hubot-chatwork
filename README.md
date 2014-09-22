@@ -33,7 +33,10 @@ export HUBOT_GITHUB_REPOS="hubot-chatwork"
 export HUBOT_API_RATE="360"
 ```
 
-4. Run hubot with chatwork adapter.
+4. Move scripts
+Move ``github_polling.coffee`` into ``scripts`` folder
+
+5. Run hubot with chatwork adapter.
 ```sh
 bin/hubot -a chatwork
 ```

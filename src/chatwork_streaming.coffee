@@ -18,71 +18,8 @@ class ChatworkStreaming extends EventEmitter
       @robot.logger.error 'API rate must be greater then 0'
       process.exit 1
 
-  Me: (callback) =>
-    @get "/me", "", callback
-
-  My: =>
-    status: (callback) =>
-      @get "/my/status", "", callback
-
-    tasks: (opts, callback) =>
-      params = []
-      params.push "assigned_by_account_id=#{opts.assignedBy}" if opts.assignedBy?
-      params.push "status=#{opts.status}" if opts.status?
-      body = params.join '&'
-      @get "/my/tasks", body, callback
-
-  Contacts: (callback) =>
-    @get "/contacts", "", callback
-
-  Rooms: =>
-    show: (callback) =>
-      @get "/rooms", "", callback
-
-    create: (name, adminIds, opts, callback) =>
-      params = []
-      params.push "name=#{name}"
-      params.push "members_admin_ids=#{adminIds.join ','}"
-      params.push "description=#{opts.desc}" if opts.desc?
-      params.push "icon_preset=#{opts.icon}" if opts.icon?
-      params.push "members_member_ids=#{opts.memberIds.join ','}" if opts.memberIds?
-      params.push "members_readonly_ids=#{opts.roIds.join ','}" if opts.roIds?
-      body = params.join '&'
-      @post "/rooms", body, callback
-
   Room: (id) =>
     baseUrl = "/rooms/#{id}"
-
-    show: (callback) =>
-      @get "#{baseUrl}", "", callback
-
-    update: (opts, callback) =>
-      params = []
-      params.push "description=#{opts.desc}" if opts.desc?
-      params.push "icon_preset=#{opts.icon}" if opts.icon?
-      params.push "name=#{opts.name}" if opts.name?
-      body = params.join '&'
-      @put "#{baseUrl}", body, callback
-
-    leave: (callback) =>
-      body = "action_type=leave"
-      @delete "#{baseUrl}", body, callback
-
-    delete: (callback) =>
-      body = "action_type=delete"
-      @delete "#{baseUrl}", body, callback
-
-    Members: =>
-      show: (callback) =>
-        @get "#{baseUrl}/members", "", callback
-
-      update: (adminIds, opts, callback) =>
-        params = []
-        params.push "members_admin_ids=#{adminIds.join ','}"
-        params.push "members_member_ids=#{opts.memberIds.join ','}" if opts.memberIds?
-        params.push "members_readonly_ids=#{opts.roIds.join ','}" if opts.roIds?
-        body = params.join '&'
-        @put "#{baseUrl}/members", body, callback
 
     Messages: =>
       show: (callback) =>
@@ -108,10 +45,6 @@ class ChatworkStreaming extends EventEmitter
                 task.send_time,
                 task.update_time
               @lastTask = task.message_id
-
-    Message: (mid) =>
-      show: (callback) =>
-        @get "#{baseUrl}/messages/#{mid}", "", callback
 
     Tasks: =>
       show: (callback) =>
@@ -141,33 +74,11 @@ class ChatworkStreaming extends EventEmitter
                 task.update_time
               @lastTask = task.task_id
 
-    Task: (tid) =>
-      show: (callback) =>
-        @get "#{baseUrl}/tasks/#{tid}", "", callback
-
-    Files: =>
-      show: (opts, callback) =>
-        body = ""
-        body += "account_id=#{opts.account}" if opts.account?
-        @get "#{baseUrl}/files", body, callback
-
-    File: (fid) =>
-      show: (opts, callback) =>
-        body = ""
-        body += "create_download_url=#{opts.createUrl}" if opts.createUrl?
-        @get "#{baseUrl}/files/#{fid}", body, callback
-
   get: (path, body, callback) ->
     @request "GET", path, body, callback
 
   post: (path, body, callback) ->
     @request "POST", path, body, callback
-
-  put: (path, body, callback) ->
-    @request "PUT", path, body, callback
-
-  delete: (path, body, callback) ->
-    @request "DELETE", path, body, callback
 
   request: (method, path, body, callback) ->
     logger = @robot.logger

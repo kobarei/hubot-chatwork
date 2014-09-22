@@ -1,5 +1,32 @@
+# Description:
+#   A Polling scripts for github repositories.
+
+{CronJob}      = require 'cron'
 HTTPS          = require 'https'
 {EventEmitter} = require 'events'
+
+module.exports = (robot) ->
+  options =
+    github_token: process.env.HUBOT_GITHUB_TOKEN
+    github_owner: process.env.HUBOT_GITHUB_OWNER
+    github_repos: process.env.HUBOT_GITHUB_REPOS
+
+  unless options.github_token? and options.github_repos? and options.github_owner?
+    robot.logger.error \
+      'Not enough parameters provided. I need a token, repos, owner'
+    process.exit 1
+
+  gh_bot = new GithubPolling options, robot
+  gh_repos = options.github_repos.split ','
+
+  cronjob = new CronJob '*/1 * * * *', () =>
+    for repo_name in gh_repos
+      gh_bot.Repos(repo_name).Commits().polling()
+
+  gh_bot.on 'commit', (repo, msg) =>
+    robot.send {}, [msg]
+
+  cronjob.start()
 
 class GithubPolling extends EventEmitter
   constructor: (options, @robot) ->
@@ -10,14 +37,9 @@ class GithubPolling extends EventEmitter
 
     @token = options.github_token
     @owner = options.github_owner
-    @rate = parseInt options.apiRate, 10
     @host = 'api.github.com'
 
-    unless @rate > 0
-      @robot.logger.error 'API rate must be greater then 0'
-      process.exit 1
-
-  Repos: (repo_name, ch_room_id) =>
+  Repos: (repo_name) =>
     Commits: =>
       fetch: (callback) =>
         @get "/repos/#{@owner}/#{repo_name}/commits", "", callback
@@ -47,7 +69,6 @@ class GithubPolling extends EventEmitter
           if message["msg"] != ""
             msg = "#{message["user"]}さんが#{repo_name}にコミットしました.\n" + message["msg"]
             @emit 'commit',
-              ch_room_id
               repo_name
               msg
 
@@ -98,5 +119,3 @@ class GithubPolling extends EventEmitter
 
     request.on "error", (err) ->
       logger.error "GitHub request error: #{err}"
-
-module.exports = GithubPolling

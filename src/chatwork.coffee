@@ -1,47 +1,96 @@
-{Robot, Adapter, TextMessage} = require 'hubot'
-ChatworkStreaming = require './chatwork_streaming.coffee'
-GithubPolling = require './github_polling.coffee'
+{Robot, Adapter} = require 'hubot'
+HTTPS            = require 'https'
 
 class Chatwork extends Adapter
   # override
   send: (envelope, strings...) ->
     if envelope.room == undefined
-      for room_id in @ch_rooms
+      console.log @options
+      for room_id in @options.rooms
         envelope.room = room_id
         @send envelope, strings
     else
       for string in strings
-        @ch_bot.Room(envelope.room).Messages().create string, (err, data) =>
+        @messages().create envelope.room, string, (err, data) =>
           @robot.logger.error "Chatwork send error: #{err}" if err?
 
   # override
   run: ->
-    options =
-      # chatwork
-      chatwork_token: process.env.HUBOT_CHATWORK_TOKEN
-      rooms: process.env.HUBOT_CHATWORK_ROOMS
-      hubot_id: process.env.HUBOT_CHATWORK_ID # chatwork hubot account ID
-      apiRate: process.env.HUBOT_API_RATE
+    @options =
+      token: process.env.HUBOT_CHATWORK_TOKEN
+      rooms: process.env.HUBOT_CHATWORK_ROOMS.split ','
 
-    ch_bot = new ChatworkStreaming options, @robot
-    ch_rooms = options.rooms.split ','
-
-    setInterval =>
-      for room_id in ch_rooms
-        ch_bot.Room(room_id).Tasks().listen()
-    , 1000 / (options.apiRate / (60 * 60))
-
-    ch_bot.on 'task', (room_id, messageId, account, body, sendAt, updatedAt) =>
-      user = @robot.brain.userForId account.account_id,
-        name: account.name
-        avatarImageUrl: account.avatar_image_url
-        room: room_id
-      @receive new TextMessage user, body, messageId
-
-    @ch_bot = ch_bot
-    @ch_rooms = ch_rooms
+    unless @options.token? and @options.rooms?
+      robot.logger.error \
+        'Not enough parameters provided. I need a token, rooms'
+      process.exit 1
 
     @emit 'connected'
+
+  messages: ->
+    create: (room, text, callback) =>
+      params = []
+      text = encodeURIComponent(text).replace(/%20/g, '+')
+      params.push "body=#{text}"
+      body = params.join '&'
+      @messages().post "/rooms/#{room}/messages", body, callback
+
+    post: (path, body, callback) =>
+      @messages().request "POST", path, body, callback
+
+    request: (method, path, body, callback) =>
+      logger = @robot.logger
+
+      console.log "chatwork #{method} #{path} #{body}"
+
+      token = @options.token
+      host = 'api.chatwork.com'
+
+      headers =
+        "Host"           : host
+        "X-ChatWorkToken": @options.token
+        "Content-Type"   : "text/plain"
+
+      options =
+        "agent"  : false
+        "host"   : host
+        "port"   : 443
+        "path"   : "/v1#{path}"
+        "method" : method
+        "headers": headers
+
+      options.headers["Content-Length"] = body.length
+
+      if body.length > 0
+        options.path += "?#{body}"
+
+      request = HTTPS.request options, (response) ->
+        data = ""
+
+        response.on "data", (chunk) ->
+          data += chunk
+
+        response.on "end", ->
+          if response.statusCode >= 400
+            switch response.statusCode
+              when 401
+                throw new Error "Invalid access token provided"
+              else
+                logger.error "Chatwork HTTPS status code: #{response.statusCode}"
+                logger.error "Chatwork HTTPS response data: #{data}"
+
+          if callback
+            json = try JSON.parse data catch e then data or {}
+            callback null, json
+
+        response.on "error", (err) ->
+          logger.error "Chatwork HTTPS response error: #{err}"
+          callback err, {}
+
+      request.end body
+
+      request.on "error", (err) ->
+        logger.error "Chatwork request error: #{err}"
 
 exports.use = (robot) ->
   new Chatwork robot

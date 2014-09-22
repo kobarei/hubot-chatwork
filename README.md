@@ -34,7 +34,7 @@ export HUBOT_API_RATE="360"
 ```
 
 4. Move scripts
-Move ``github_polling.coffee`` into ``scripts`` folder
+Move ``scripts/github-polling.coffee`` & ``scripts/chatwork-task-polling.coffee`` into ``scripts`` folder
 
 5. Run hubot with chatwork adapter.
 ```sh

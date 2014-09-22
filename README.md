@@ -3,10 +3,7 @@ hubot-chatwork
 
 A Hubot adapter for chatwork.
 
-[![Build Status](https://travis-ci.org/akiomik/hubot-chatwork.png?branch=master)](https://travis-ci.org/akiomik/hubot-chatwork)
-[![Coverage Status](https://coveralls.io/repos/akiomik/hubot-chatwork/badge.png?branch=master)](https://coveralls.io/r/akiomik/hubot-chatwork?branch=master)
-[![Dependency Status](https://gemnasium.com/akiomik/hubot-chatwork.png)](https://gemnasium.com/akiomik/hubot-chatwork)
-[![NPM version](https://badge.fury.io/js/hubot-chatwork.png)](http://badge.fury.io/js/hubot-chatwork)
+This repo is quite different from original [akiomik/hubot-chatwork](https://github.com/akiomik/hubot-chatwork). Most of functions are modified, removed or devided into ``src/scripts``. Test files are not modified for these changes.
 
 ## Installation
 
@@ -29,7 +26,7 @@ export HUBOT_CHATWORK_ROOMS="123,456"   # comma separated
 export HUBOT_CHATWORK_ID="123456"   # chatwork ID for hubot task
 export HUBOT_GITHUB_TOKEN="**************************"
 export HUBOT_GITHUB_OWNER="kobarei"
-export HUBOT_GITHUB_REPOS="hubot-chatwork" #this is optional settings
+export HUBOT_GITHUB_REPOS="hubot-chatwork,another_repo" # this is optional settings
 export HUBOT_API_RATE="360"
 ```
 

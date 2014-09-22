@@ -1,5 +1,11 @@
 # Description:
 #   A Polling scripts for chatwork tasks.
+#
+# Configuration:
+#   HUBOT_CHATWORK_TOKEN
+#   HUBOT_CHATWORK_ROOMS
+#   HUBOT_CHATWORK_ID
+#   HUBOT_API_RATE
 
 {TextMessage}  = require 'hubot'
 HTTPS          = require 'https'

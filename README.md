@@ -29,7 +29,7 @@ export HUBOT_CHATWORK_ROOMS="123,456"   # comma separated
 export HUBOT_CHATWORK_ID="123456"   # chatwork ID for hubot task
 export HUBOT_GITHUB_TOKEN="**************************"
 export HUBOT_GITHUB_OWNER="kobarei"
-export HUBOT_GITHUB_REPOS="hubot-chatwork"
+export HUBOT_GITHUB_REPOS="hubot-chatwork" #this is optional settings
 export HUBOT_API_RATE="360"
 ```
 

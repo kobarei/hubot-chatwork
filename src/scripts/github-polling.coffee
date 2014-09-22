@@ -53,7 +53,7 @@ class GithubPolling extends EventEmitter
 
   Users: =>
     fetch: (callback) =>
-      @get "/user/repos", "", callback
+      @get "/user/repos?type=owner", "", callback
 
     repos: () =>
       @Users().fetch (err, repos) =>

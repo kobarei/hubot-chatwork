@@ -65,25 +65,24 @@ class GithubPolling extends EventEmitter
   Repos: (repo_name) =>
     Commits: =>
       fetch: (callback) =>
-        @get "/repos/#{@owner}/#{repo_name}/commits", "", callback
+        @get "/repos/#{@owner}/#{repo_name}/commits?sha=develop", "", callback
 
       polling: () =>
         @Repos(repo_name).Commits().fetch (err, commits) =>
           message = {}
+          message["msg"] = ""
           lastCommit = @robot.brain.get repo_name
           if lastCommit == null
             @robot.brain.set repo_name, commits[0].commit.committer.date
             @robot.brain.save()
 
           for commit in commits.reverse()
-            # initialize message component
-            message["msg"] = "" if message["msg"] is undefined
 
             lastCommit = @robot.brain.get repo_name
             if lastCommit < commit.commit.committer.date
               # add commit message
               message["user"] = commit.committer.login
-              message["msg"] += "  * #{commit.commit.message}: ( #{commit.html_url} )\n"
+              message["msg"] += "  * #{commit.commit.message.replace(/:p/,': p')}: ( #{commit.html_url} )\n"
               lastCommit = commit.commit.committer.date
 
             @robot.brain.set repo_name, lastCommit

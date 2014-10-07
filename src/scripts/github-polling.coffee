@@ -19,10 +19,10 @@ module.exports = (robot) ->
     github_owner: process.env.HUBOT_GITHUB_OWNER
     github_repos: process.env.HUBOT_GITHUB_REPOS
 
-  unless options.github_token? and options.github_owner?
-    robot.logger.error \
-      'Not enough parameters provided. I need a token, repos, owner'
-    process.exit 1
+  # unless options.github_token? and options.github_owner?
+  #   robot.logger.error \
+  #     'Not enough parameters provided. I need a token, repos, owner'
+  #   process.exit 1
 
   gh_bot = new GithubPolling options, robot
 

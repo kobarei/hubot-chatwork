@@ -32,6 +32,7 @@ module.exports = (robot) ->
     for repo in repos
       gh_repos.push { "name": repo }
 
+  # every 1 min
   cronjob = new CronJob '*/1 * * * *', () =>
     if gh_repos.length > 0
       gh_bot.emit 'repo_set', gh_repos

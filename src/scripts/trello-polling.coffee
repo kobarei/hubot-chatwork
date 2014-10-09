@@ -28,10 +28,11 @@ module.exports = (robot) ->
 
   boards = options.trello_boards.split ','
 
+  # every 60 seconds
   setInterval =>
     for board_id in boards
       trl_bot.Board(board_id).Actions().polling()
-  , 1000 / (720 / (60 * 60))
+  , 1000 / (60 / (60 * 60))
 
   trl_bot.on 'built', (msg) =>
     console.log "EMIT"

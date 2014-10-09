@@ -124,7 +124,7 @@ class TrelloPolling extends EventEmitter
         @Board(board_id).Actions().fetch (err, actions) =>
           lastAction = @robot.brain.get board_id
           if lastAction == null
-            @robot.brain.set board_id, actions[4].date
+            @robot.brain.set board_id, actions[0].date
             @robot.brain.save()
 
           for action in actions.reverse()

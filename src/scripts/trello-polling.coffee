@@ -35,7 +35,6 @@ module.exports = (robot) ->
   , 1000 / (60 / (60 * 60))
 
   trl_bot.on 'built', (msg) =>
-    console.log "EMIT"
     robot.send {}, [msg]
 
 class TrelloPolling extends EventEmitter
@@ -107,7 +106,6 @@ class TrelloPolling extends EventEmitter
         @Message.build action, message
 
       build: (action, message) =>
-        console.log 'build'
         premsg = "ボード: #{action.data.board.name}\n"
         premsg += "リスト: #{action.data.list?.name || ''}\n"
         message = premsg + message
@@ -130,9 +128,7 @@ class TrelloPolling extends EventEmitter
           for action in actions.reverse()
             lastAction = @robot.brain.get board_id
             if lastAction < action.date
-              console.log "BeforeaddMemberToCard"
               @Message[action.type] action
-              console.log "AfteraddMemberToCard"
               lastAction = action.date
 
             @robot.brain.set board_id, lastAction
@@ -143,7 +139,7 @@ class TrelloPolling extends EventEmitter
 
   request: (method, path, body, callback) ->
     logger = @robot.logger
-    console.log "trello #{method} #{path} #{body}"
+    # console.log "trello #{method} #{path} #{body}"
 
     headers =
       "Host" : @host

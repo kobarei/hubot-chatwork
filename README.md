@@ -27,6 +27,9 @@ export HUBOT_CHATWORK_ID="123456"   # chatwork ID for hubot task
 export HUBOT_GITHUB_TOKEN="**************************"
 export HUBOT_GITHUB_OWNER="kobarei"
 export HUBOT_GITHUB_REPOS="hubot-chatwork,another_repo" # this is optional settings
+export HUBOT_TRELLO_KEY="*********" \
+export HUBOT_TRELLO_TOKEN="**********" \
+export HUBOT_TRELLO_BOARDS="***********" \
 export HUBOT_API_RATE="360"
 ```
 

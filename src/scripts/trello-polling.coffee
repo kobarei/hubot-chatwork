@@ -28,7 +28,7 @@ module.exports = (robot) ->
 
   boards = options.trello_boards.split ','
 
-  # every 60 seconds
+  # every 10 seconds
   setInterval =>
     for board_id in boards
       trl_bot.Board(board_id).Actions().polling()

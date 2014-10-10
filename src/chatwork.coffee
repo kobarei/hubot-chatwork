@@ -9,9 +9,8 @@ class Chatwork extends Adapter
         envelope.room = room_id
         @send envelope, strings
     else
-      for string in strings
-        @create envelope.room, string, (err, data) =>
-          @robot.logger.error "Chatwork send error: #{err}" if err?
+      @create envelope.room, strings, (err, data) =>
+        @robot.logger.error "Chatwork send error: #{err}" if err?
 
   # override
   run: ->

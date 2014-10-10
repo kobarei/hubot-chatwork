@@ -8,6 +8,7 @@
 #   HUBOT_GITHUB_TOKEN
 #   HUBOT_GITHUB_OWNER
 #   HUBOT_GITHUB_REPOS (Optional)
+#   HUBOT_CHATWORK_DEV_ROOM
 
 {CronJob}      = require 'cron'
 HTTPS          = require 'https'
@@ -18,8 +19,9 @@ module.exports = (robot) ->
     github_token: process.env.HUBOT_GITHUB_TOKEN
     github_owner: process.env.HUBOT_GITHUB_OWNER
     github_repos: process.env.HUBOT_GITHUB_REPOS
+    chatwork_dev_room: process.env.HUBOT_CHATWORK_DEV_ROOM
 
-  unless options.github_token? and options.github_owner?
+  unless options.github_token? and options.github_owner? and options.chatwork_dev_room?
     robot.logger.error \
       'Not enough parameters provided. I need a token, repos, owner'
     process.exit 1
@@ -42,7 +44,7 @@ module.exports = (robot) ->
   cronjob.start()
 
   gh_bot.on 'commit', (msg) =>
-    robot.send {}, [msg]
+    robot.send { room: options.chatwork_dev_room }, [msg]
 
   gh_bot.on 'repo_set', (repos) =>
     for repo in repos

@@ -32,12 +32,12 @@ module.exports = (robot) ->
       ch_bot.Room(room_id).Tasks().listen()
   , 1000 / (options.apiRate / (60 * 60))
 
-  ch_bot.on 'task', (room_id, messageId, account, body, sendAt, updatedAt) =>
+  ch_bot.on 'task', (room_id, taskId, account, body, limit_time) =>
     user = robot.brain.userForId account.account_id,
       name: account.name
-      avatarImageUrl: account.avatar_image_url
       room: room_id
-    robot.receive new TextMessage user, body, messageId
+      limitTime: limit_time
+    robot.receive new TextMessage user, body, taskId
 
 class ChatworkTaskPolling extends EventEmitter
   constructor: (options, @robot) ->
@@ -71,8 +71,7 @@ class ChatworkTaskPolling extends EventEmitter
                 task.task_id,
                 task.account,
                 task.body,
-                task.send_time,
-                task.update_time
+                task.limit_time
               @lastTask = task.task_id
 
   get: (path, body, callback) ->

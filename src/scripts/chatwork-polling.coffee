@@ -29,15 +29,18 @@ module.exports = (robot) ->
 
   setInterval =>
     for room_id in ch_rooms
-      ch_bot.Room(room_id).Tasks().listen()
+      ch_bot.Room(room_id).Tasks().listenOpen()
+    for room_id in ch_rooms
+      ch_bot.Room(room_id).Tasks().listenDone()
   , 1000 / (options.apiRate / (60 * 60))
 
-  ch_bot.on 'task', (room_id, taskId, account, body, limit_time) =>
+  ch_bot.on 'task', (room_id, task_id, account, body, limit_time) =>
     user = robot.brain.userForId account.account_id,
       name: account.name
       room: room_id
       limitTime: limit_time
-    robot.receive new TextMessage user, body, taskId
+      taskId: task_id
+    robot.receive new TextMessage user, body, task_id
 
 class ChatworkTaskPolling extends EventEmitter
   constructor: (options, @robot) ->
@@ -46,7 +49,7 @@ class ChatworkTaskPolling extends EventEmitter
     @hubot_id = options.hubot_id
     @host     = 'api.chatwork.com'
     @rate     = parseInt options.apiRate, 10
-    @lastTask = 0
+    @openLastTask = 0
 
     unless @rate > 0
       @robot.logger.error 'API rate must be greater then 0'
@@ -55,24 +58,35 @@ class ChatworkTaskPolling extends EventEmitter
   Room: (id) =>
     baseUrl = "/rooms/#{id}"
 
-    Tasks: =>
-      show: (callback) =>
+    Tasks: () =>
+      show: (status, callback) =>
         params = []
-        params.push "status=open"
+        params.push "status=#{status}"
         body = params.join '&'
         @get "#{baseUrl}/tasks", body, callback
 
-      listen: =>
-        @Room(id).Tasks().show (err, tasks) =>
+      listenOpen: =>
+        @Room(id).Tasks().show "open", (err, tasks) =>
           for task in tasks
-            if @lastTask < task.task_id and "#{task.account.account_id}" is @hubot_id and Math.round(+new Date()/1000) < task.limit_time
+            if @openLastTask < task.task_id and "#{task.account.account_id}" is @hubot_id and Math.round(+new Date()/1000) < task.limit_time
               @emit 'task',
-                id,
-                task.task_id,
-                task.account,
-                task.body,
+                id
+                task.task_id
+                task.account
+                task.body
                 task.limit_time
-              @lastTask = task.task_id
+              @openLastTask = task.task_id
+
+      listenDone: =>
+        @Room(id).Tasks().show "done", (err, tasks) =>
+          for task in tasks
+            if @robot.brain.get "chTask:#{task.task_id}"
+              @emit 'task',
+                id
+                task.task_id
+                task.account
+                "hubot close_reqdev"
+                task.limit_time
 
   get: (path, body, callback) ->
     @request "GET", path, body, callback

@@ -8,6 +8,7 @@
 #   HUBOT_TRELLO_KEY
 #   HUBOT_TRELLO_TOKEN
 #   HUBOT_TRELLO_BOARDS (board_id)
+#   HUBOT_CHATWORK_DEV_ROOM
 
 {CronJob}      = require 'cron'
 HTTPS          = require 'https'
@@ -18,6 +19,7 @@ module.exports = (robot) ->
     trello_key:    process.env.HUBOT_TRELLO_KEY
     trello_token:  process.env.HUBOT_TRELLO_TOKEN
     trello_boards: process.env.HUBOT_TRELLO_BOARDS
+    chatwork_dev_room: process.env.HUBOT_CHATWORK_DEV_ROOM
 
   unless options.trello_key? and options.trello_token? and options.trello_boards?
     robot.logger.error \
@@ -35,7 +37,7 @@ module.exports = (robot) ->
   , 1000 / (360 / (60 * 60))
 
   trl_bot.on 'built', (msg) =>
-    robot.send {}, [msg]
+    robot.send { room: options.chatwork_dev_room }, [msg]
 
 class TrelloPolling extends EventEmitter
   constructor: (options, @robot) ->

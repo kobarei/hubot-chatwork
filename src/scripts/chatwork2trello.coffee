@@ -26,10 +26,25 @@ module.exports = (robot) ->
 
     createCard msg, cardName, dueDate
 
-createCard = (msg, cardName, dueDate) ->
-  t = new Trello process.env.HUBOT_TRELLO_KEY, process.env.HUBOT_TRELLO_TOKEN
-  t.post "/1/cards", { name: cardName, idList: process.env.HUBOT_TRELLO_REQDEV_LIST, due: dueDate }, (err, data) ->
-    if err
-      msg.send "There was an error creating the card"
-    else
-      msg.send "#{msg.envelope.user.name}さんが開発に#{data.name}を依頼しました\n#{data.url}"
+  createCard = (msg, cardName, dueDate) ->
+    t = new Trello process.env.HUBOT_TRELLO_KEY, process.env.HUBOT_TRELLO_TOKEN
+    t.post "/1/cards", { name: cardName, idList: process.env.HUBOT_TRELLO_REQDEV_LIST, due: dueDate }, (err, data) ->
+      if err
+        msg.send "There was an error creating the card"
+      else
+        msg.send "#{msg.envelope.user.name}さんが開発に#{data.name}を依頼しました\n#{data.url}"
+        robot.brain.set "chTask:#{msg.envelope.user.taskId}", data.id
+        robot.brain.save()
+
+  robot.respond /CLOSE_REQDEV$/i, (msg) ->
+    close msg
+
+  close = (msg) ->
+    task_id = robot.brain.get "chTask:#{msg.envelope.user.taskId}"
+    t = new Trello process.env.HUBOT_TRELLO_KEY, process.env.HUBOT_TRELLO_TOKEN
+    t.put "/1/cards/#{task_id}", { closed: true }, (err, data) ->
+      if err
+        msg.send "There was an error closing the card"
+      else
+        robot.brain.remove "chTask:#{msg.envelope.user.taskId}"
+        robot.brain.save()

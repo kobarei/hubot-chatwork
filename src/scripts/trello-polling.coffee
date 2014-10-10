@@ -32,7 +32,7 @@ module.exports = (robot) ->
   setInterval =>
     for board_id in boards
       trl_bot.Board(board_id).Actions().polling()
-  , 1000 / (60 / (60 * 60))
+  , 1000 / (360 / (60 * 60))
 
   trl_bot.on 'built', (msg) =>
     robot.send {}, [msg]

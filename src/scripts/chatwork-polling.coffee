@@ -93,7 +93,7 @@ class ChatworkTaskPolling extends EventEmitter
 
   request: (method, path, body, callback) ->
     logger = @robot.logger
-    console.log "chatwork #{method} #{path} #{body}"
+    # console.log "chatwork #{method} #{path} #{body}"
 
     headers =
       "Host"           : @host

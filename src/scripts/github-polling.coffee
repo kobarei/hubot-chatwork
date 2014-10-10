@@ -46,7 +46,11 @@ module.exports = (robot) ->
 
   gh_bot.on 'repo_set', (repos) =>
     for repo in repos
-      gh_bot.Repos(repo.name).Commits().polling()
+      gh_bot.Repos(repo.name).Branches().fetch()
+
+  gh_bot.on 'branch_set', (repo_name, branches) =>
+    for branch in branches
+      gh_bot.Repos(repo_name).Commits(branch.name).polling()
 
 class GithubPolling extends EventEmitter
   constructor: (options, @robot) ->
@@ -64,33 +68,38 @@ class GithubPolling extends EventEmitter
         @emit 'repo_set', repos
 
   Repos: (repo_name) =>
-    Commits: =>
+    Branches: () =>
+      fetch: () =>
+        @get "/repos/#{@owner}/#{repo_name}/branches", "", (err, branches) =>
+          @emit 'branch_set', repo_name, branches
+
+    Commits: (branch_name) =>
       fetch: (callback) =>
-        @get "/repos/#{@owner}/#{repo_name}/commits?sha=develop", "", callback
+        @get "/repos/#{@owner}/#{repo_name}/commits?sha=#{branch_name}", "", callback
 
       polling: () =>
-        @Repos(repo_name).Commits().fetch (err, commits) =>
+        @Repos(repo_name).Commits(branch_name).fetch (err, commits) =>
           message = {}
           message["msg"] = ""
-          lastCommit = @robot.brain.get repo_name
+          lastCommit = @robot.brain.get "#{repo_name}:#{branch_name}"
           if lastCommit == null
-            @robot.brain.set repo_name, commits[0].commit.committer.date
+            @robot.brain.set "#{repo_name}:#{branch_name}", commits[0].commit.committer.date
             @robot.brain.save()
 
           for commit in commits.reverse()
 
-            lastCommit = @robot.brain.get repo_name
+            lastCommit = @robot.brain.get "#{repo_name}:#{branch_name}"
             if lastCommit < commit.commit.committer.date
               # add commit message
               message["user"] = commit.committer.login
               message["msg"] += "  * #{commit.commit.message.replace(/:p/,': p')}: ( #{commit.html_url} )\n"
               lastCommit = commit.commit.committer.date
 
-            @robot.brain.set repo_name, lastCommit
+            @robot.brain.set "#{repo_name}:#{branch_name}", lastCommit
             @robot.brain.save()
 
           if message["msg"] != ""
-            msg = "#{message["user"]}さんが#{repo_name}にコミットしました.\n" + message["msg"]
+            msg = "#{message["user"]}さんが#{repo_name}:#{branch_name}にコミットしました.\n" + message["msg"]
             @emit 'commit',
               msg
 

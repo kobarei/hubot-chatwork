@@ -68,7 +68,7 @@ class ChatworkTaskPolling extends EventEmitter
       listenOpen: =>
         @Room(id).Tasks().show "open", (err, tasks) =>
           if @openLastTask == 0
-            @robot.brain.set id, tasks[0].date
+            @robot.brain.set id, tasks[0].task_id
             @robot.brain.save()
 
           for task in tasks

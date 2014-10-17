@@ -52,5 +52,6 @@ module.exports = (robot) ->
       if err
         msg.send "There was an error closing the card"
       else
+        msg.send "#{msg.envelope.user.name}がタスクを完了しました"
         robot.brain.remove "chTask:#{msg.envelope.user.taskId}"
         robot.brain.save()

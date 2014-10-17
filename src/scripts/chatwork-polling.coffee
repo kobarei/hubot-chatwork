@@ -49,7 +49,6 @@ class ChatworkTaskPolling extends EventEmitter
     @hubot_id = options.hubot_id
     @host     = 'api.chatwork.com'
     @rate     = parseInt options.apiRate, 10
-    @openLastTask = 0
 
     unless @rate > 0
       @robot.logger.error 'API rate must be greater then 0'
@@ -67,13 +66,9 @@ class ChatworkTaskPolling extends EventEmitter
 
       listenOpen: =>
         @Room(id).Tasks().show "open", (err, tasks) =>
-          if @openLastTask == 0 && tasks.length > 0
-            @robot.brain.set id, tasks[0].task_id
-            @robot.brain.save()
-
           for task in tasks
-            @openLastTask = @robot.brain.get id
-            if @openLastTask < task.task_id and "#{task.account.account_id}" is @hubot_id
+            openLastTask = @robot.brain.get id
+            if openLastTask < task.task_id and "#{task.account.account_id}" is @hubot_id || openLastTask == null
               @emit 'task',
                 id
                 task.task_id

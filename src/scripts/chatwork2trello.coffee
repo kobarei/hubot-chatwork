@@ -15,7 +15,7 @@
 Trello = require "node-trello"
 
 module.exports = (robot) ->
-  robot.respond /REQDEV ((.|\n)*)$/i, (msg) ->
+  robot.respond /REQUEST DEVELOP ((.|\n)*)$/i, (msg) ->
     cardName = msg.match[1]
     dueDate = new Date msg.envelope.user.limitTime * 1000
 

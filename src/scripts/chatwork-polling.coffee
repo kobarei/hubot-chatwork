@@ -35,7 +35,7 @@ module.exports = (robot) ->
   , 1000 / (options.apiRate / (60 * 60))
 
   ch_bot.on 'task', (room_id, task_id, account, body, limit_time) =>
-    user = robot.brain.userForId account.account_id,
+    user = robot.brain.userForId task_id,
       name: account.name
       room: room_id
       limitTime: limit_time

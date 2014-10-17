@@ -16,7 +16,7 @@
 Trello = require "node-trello"
 
 module.exports = (robot) ->
-  robot.respond /REQDEV ((.|\n)*)$/i, (msg) ->
+  robot.respond /開発依頼 ((.|\n)*)$/i, (msg) ->
     unless process.env.HUBOT_TRELLO_TOKEN? and process.env.HUBOT_TRELLO_KEY? and process.env.HUBOT_TRELLO_REQDEV_LIST? and process.env.HUBOT_CHATWORK_DEV_ROOM?
       robot.logger.error \
         'Not enough parameters provided. I need a token, key, list'
@@ -35,11 +35,9 @@ module.exports = (robot) ->
       else
         if msg['envelope']['room'] != process.env.HUBOT_CHATWORK_DEV_ROOM
           msg.send "開発に#{data.name}を依頼しました\n#{data.url}"
-          # send message also develop room
-          msg['envelope']['room'] = process.env.HUBOT_CHATWORK_DEV_ROOM
-          createCard msg
-        else
-          msg.send "#{msg.envelope.user.name}さんが開発に#{data.name}を依頼しました\n#{data.url}"
+
+        msg['envelope']['room'] = process.env.HUBOT_CHATWORK_DEV_ROOM
+        msg.send "#{msg.envelope.user.name}さんが開発に#{data.name}を依頼しました\n#{data.url}"
 
         robot.brain.set "chTask:#{msg.envelope.user.taskId}", data.id
         robot.brain.save()

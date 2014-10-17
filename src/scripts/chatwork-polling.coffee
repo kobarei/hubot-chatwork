@@ -72,7 +72,7 @@ class ChatworkTaskPolling extends EventEmitter
               @emit 'task',
                 id
                 task.task_id
-                task.account
+                task.assigned_by_account
                 task.body
                 task.limit_time
               @robot.brain.set id, task.task_id
@@ -85,7 +85,7 @@ class ChatworkTaskPolling extends EventEmitter
               @emit 'task',
                 id
                 task.task_id
-                task.account
+                task.assigned_by_account
                 "hubot close_reqdev"
                 task.limit_time
 

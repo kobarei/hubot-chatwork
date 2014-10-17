@@ -68,9 +68,11 @@ class ChatworkTaskPolling extends EventEmitter
       listenOpen: =>
         @Room(id).Tasks().show "open", (err, tasks) =>
           if @openLastTask == 0
-            @openLastTask = tasks[0].task_id
+            @robot.brain.set id, tasks[0].date
+            @robot.brain.save()
 
           for task in tasks
+            @openLastTask = @robot.brain.get id
             if @openLastTask < task.task_id and "#{task.account.account_id}" is @hubot_id
               @emit 'task',
                 id
@@ -78,7 +80,8 @@ class ChatworkTaskPolling extends EventEmitter
                 task.account
                 task.body
                 task.limit_time
-              @openLastTask = task.task_id
+              @robot.brain.set id, task.task_id
+              @robot.brain.save()
 
       listenDone: =>
         @Room(id).Tasks().show "done", (err, tasks) =>

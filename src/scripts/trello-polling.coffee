@@ -8,6 +8,7 @@
 #   HUBOT_TRELLO_KEY
 #   HUBOT_TRELLO_TOKEN
 #   HUBOT_TRELLO_BOARDS (board_id)
+#   HUBOT_TRELLO_ID (board_id)
 #   HUBOT_CHATWORK_DEV_ROOM
 
 {CronJob}      = require 'cron'
@@ -19,9 +20,10 @@ module.exports = (robot) ->
     trello_key:    process.env.HUBOT_TRELLO_KEY
     trello_token:  process.env.HUBOT_TRELLO_TOKEN
     trello_boards: process.env.HUBOT_TRELLO_BOARDS
+    trello_id: process.env.HUBOT_TRELLO_ID
     chatwork_dev_room: process.env.HUBOT_CHATWORK_DEV_ROOM
 
-  unless options.trello_key? and options.trello_token? and options.trello_boards?
+  unless options.trello_key? and options.trello_token? and options.trello_boards? and options.trello_id?
     robot.logger.error \
       'Not enough parameters provided. I need a key, token, boards'
     process.exit 1
@@ -43,7 +45,8 @@ class TrelloPolling extends EventEmitter
   constructor: (options, @robot) ->
     @key   = options.trello_key
     @token = options.trello_token
-    @host  = 'trello.com'
+    @trello_id = options.trello_id
+    @host  = 'api.trello.com'
 
     @Message =
       addMemberToBoard: (action) =>
@@ -129,7 +132,7 @@ class TrelloPolling extends EventEmitter
 
           for action in actions.reverse()
             lastAction = @robot.brain.get board_id
-            if lastAction < action.date
+            if lastAction < action.date && @trello_id != action.memberCreator.id
               @Message[action.type] action
               lastAction = action.date
 

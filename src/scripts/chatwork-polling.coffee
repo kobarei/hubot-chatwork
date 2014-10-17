@@ -67,8 +67,11 @@ class ChatworkTaskPolling extends EventEmitter
 
       listenOpen: =>
         @Room(id).Tasks().show "open", (err, tasks) =>
+          if @openLastTask == 0
+            @openLastTask = tasks[0].task_id
+
           for task in tasks
-            if @openLastTask < task.task_id and "#{task.account.account_id}" is @hubot_id and Math.round(+new Date()/1000) < task.limit_time
+            if @openLastTask < task.task_id and "#{task.account.account_id}" is @hubot_id
               @emit 'task',
                 id
                 task.task_id

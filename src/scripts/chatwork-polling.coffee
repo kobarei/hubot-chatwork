@@ -40,6 +40,7 @@ module.exports = (robot) ->
       room: room_id
       limitTime: limit_time
       taskId: task_id
+    body = "hubot #{body}" unless body.match /^hubot/
     robot.receive new TextMessage user, body, task_id
 
 class ChatworkTaskPolling extends EventEmitter

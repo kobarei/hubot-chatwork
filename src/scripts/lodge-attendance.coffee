@@ -2,6 +2,7 @@
 #   A Polling scripts for lodge
 #
 # Dependencies:
+#   "cron": ""
 #   "nightmare": "^1.5.0"
 #   "moment": "^2.8.3"
 #
@@ -14,6 +15,7 @@
 
 {EventEmitter} = require 'events'
 {TextMessage}  = require 'hubot'
+{CronJob}      = require 'cron'
 moment         = require "moment"
 Nightmare      = require 'nightmare'
 
@@ -26,9 +28,8 @@ module.exports = (robot) ->
 
   lodgebot = new LodgePolling options, robot
 
-  setInterval ->
+  cronjob = new CronJob '00 23 * * *', () =>
     lodgebot.Articles().polling()
-  , 1000 / (180 / (60 * 60))
 
   lodgebot.on 'attendance', (set) ->
     set[0] = moment(set[0], 'YYYYMMDD').format('YYYY/MM/DD')

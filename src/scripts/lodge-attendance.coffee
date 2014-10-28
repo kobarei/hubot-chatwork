@@ -46,7 +46,6 @@ class Nightlodge
   stackReports: (cb) ->
     (nightmare) ->
       nightmare
-        .screenshot('./table.png')
         .evaluate(->
           dateset = new Date()
           year = dateset.getFullYear()
@@ -81,7 +80,6 @@ class LodgePolling extends EventEmitter
       nightmare = new Nightmare(weak: false)
       nightmare
         .goto(path)
-        .screenshot('./login.png')
         .use(lodgecli.lodgeLogin(@lodge_id, @lodge_password))
         .wait("#articles-table")
         .use(
@@ -90,7 +88,6 @@ class LodgePolling extends EventEmitter
               nightmare
                 .goto(item)
                 .wait("#comment_body")
-                .screenshot('./report.png')
                 .evaluate( ->
 
                   dateset = new Date()

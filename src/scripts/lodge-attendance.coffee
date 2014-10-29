@@ -98,8 +98,8 @@ class LodgePolling extends EventEmitter
 
                   if document.querySelector('.panel-body').innerHTML.match(/\d+\/\d+\/\d+/)[0] is "#{year}/#{month}/#{date}"
                     title = document.querySelector('h1').innerHTML.match(/【([^<]*)】([^<]*)/)
-                    time = document.querySelector(".markdown").querySelectorAll("ul")[1].querySelector("li").innerHTML.replace(/<br>/, "")
-                    [title[1], title[2], time, time.match(/\d*時間\d*分/)[0].replace(/時間/, ':').replace(/分/, ''), location.href]
+                    time = document.querySelector(".markdown").querySelectorAll("ul")[1].innerHTML
+                    [title[1], title[2], time.match(/\d*時間\d*分/)[0].replace(/時間/, ':').replace(/分/, ''), location.href]
                   else
                     []
                 ,

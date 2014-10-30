@@ -3,22 +3,22 @@
 #
 # Dependencies:
 #   "cron": ""
+#   "moment": ""
 #
 # Configuration:
 #   HUBOT_GITHUB_TOKEN
 #   HUBOT_GITHUB_OWNER
-#   HUBOT_GITHUB_REPOS (Optional)
 #   HUBOT_CHATWORK_DEV_ROOM
 
 {CronJob}      = require 'cron'
 HTTPS          = require 'https'
 {EventEmitter} = require 'events'
+moment         = require 'moment'
 
 module.exports = (robot) ->
   options =
     github_token: process.env.HUBOT_GITHUB_TOKEN
     github_owner: process.env.HUBOT_GITHUB_OWNER
-    github_repos: process.env.HUBOT_GITHUB_REPOS
     chatwork_dev_room: process.env.HUBOT_CHATWORK_DEV_ROOM
 
   unless options.github_token? and options.github_owner? and options.chatwork_dev_room?
@@ -28,17 +28,9 @@ module.exports = (robot) ->
 
   gh_bot = new GithubPolling options, robot
 
-  gh_repos = []
-  if options.github_repos
-    repos = options.github_repos.split ','
-    for repo in repos
-      gh_repos.push { "name": repo }
-
-  # every 5 min
-  cronjob = new CronJob '*/5 * * * *', () ->
-    if gh_repos.length > 0
-      gh_bot.emit 'repo_set', gh_repos
-    else
+  # every 1 min
+  cronjob = new CronJob '*/1 * * * *', () ->
+    if gh_bot.ratelimitRemaining / ((gh_bot.ratelimitReset - moment().unix() + 1) / 60) > 80
       gh_bot.Users().repos()
 
   cronjob.start()
@@ -60,6 +52,8 @@ class GithubPolling extends EventEmitter
     @token = options.github_token
     @owner = options.github_owner
     @host  = 'api.github.com'
+    @ratelimitRemaining = 5000
+    @ratelimitReset = moment().add(5, 'minute').unix()
 
   Users: =>
     fetch: (callback) =>
@@ -93,7 +87,7 @@ class GithubPolling extends EventEmitter
             lastCommit = @robot.brain.get "#{repo_name}:#{branch_name}"
             if lastCommit < commit.commit.committer.date
               # add commit message
-              message["user"] = commit.committer.login
+              message["user"] = commit.commit.committer.name
               message["msg"] += "  * #{commit.commit.message.replace(/:p/,': p')}: ( #{commit.html_url} )\n"
               lastCommit = commit.commit.committer.date
 
@@ -125,13 +119,15 @@ class GithubPolling extends EventEmitter
       "method" : method
       "headers": headers
 
-    request = HTTPS.request options, (response) ->
+    request = HTTPS.request options, (response) =>
       data = ""
 
       response.on "data", (chunk) ->
         data += chunk
 
-      response.on "end", ->
+      response.on "end", =>
+        @ratelimitRemaining = response.headers["x-ratelimit-remaining"]
+        @ratelimitReset = response.headers["x-ratelimit-reset"]
         if response.statusCode >= 400
           switch response.statusCode
             when 401

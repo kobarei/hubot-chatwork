@@ -5,6 +5,7 @@
 #   "cron": ""
 #   "nightmare": "^1.5.0"
 #   "moment": "^2.8.3"
+#   "time": "^0.11.0"
 #
 # Configuration:
 #   HUBOT_LODGE_ID
@@ -17,6 +18,7 @@
 {TextMessage}  = require 'hubot'
 {CronJob}      = require 'cron'
 moment         = require "moment"
+time           = require "time"
 Nightmare      = require 'nightmare'
 
 module.exports = (robot) ->
@@ -28,8 +30,9 @@ module.exports = (robot) ->
 
   lodgebot = new LodgePolling options, robot
 
-  cronjob = new CronJob '00 23 * * *', () =>
+  cronjob = new CronJob '00 30 23 * * *', () ->
     lodgebot.Articles().polling()
+  , null, true, "Asia/Tokyo"
 
   lodgebot.on 'attendance', (set) ->
     set[0] = moment(set[0], 'YYYYMMDD').format('YYYY/MM/DD')

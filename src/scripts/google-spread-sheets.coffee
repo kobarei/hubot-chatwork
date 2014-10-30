@@ -1,5 +1,5 @@
 # Description:
-#   A Polling scripts for lodge
+#   Add column to google spreadsheet
 #
 # Dependencies:
 #   "edit-google-spreadsheets": "^1.0.19"

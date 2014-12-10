@@ -19,7 +19,7 @@ class Chatwork extends Adapter
       rooms: process.env.HUBOT_CHATWORK_ROOMS.split ','
 
     unless @options.token? and @options.rooms?
-      robot.logger.error \
+      @robot.logger.error \
         'Not enough parameters provided. I need a token, rooms'
       process.exit 1
 

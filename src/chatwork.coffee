@@ -1,5 +1,6 @@
 {Robot, Adapter} = require 'hubot'
 HTTPS            = require 'https'
+querystring      = require 'querystring'
 
 class Chatwork extends Adapter
   # override
@@ -27,8 +28,7 @@ class Chatwork extends Adapter
 
   create: (room, text, callback) ->
     params = []
-    text = encodeURIComponent(text).replace(/%20/g, '+')
-    params.push "body=#{text}"
+    params.push text
     body = params.join '&'
     @post "/rooms/#{room}/messages", body, callback
 
@@ -46,7 +46,7 @@ class Chatwork extends Adapter
     headers =
       "Host"           : host
       "X-ChatWorkToken": @options.token
-      "Content-Type"   : "text/plain"
+      "Content-Type"   : "application/x-www-form-urlencoded"
 
     options =
       "agent"  : false
@@ -56,10 +56,9 @@ class Chatwork extends Adapter
       "method" : method
       "headers": headers
 
-    options.headers["Content-Length"] = body.length
+    postData = querystring.stringify("body": body)
 
-    if body.length > 0
-      options.path += "?#{body}"
+    options.headers["Content-Length"] = postData.length
 
     request = HTTPS.request options, (response) ->
       data = ""
@@ -84,7 +83,9 @@ class Chatwork extends Adapter
         logger.error "Chatwork HTTPS response error: #{err}"
         callback err, {}
 
-    request.end body
+    request.write postData
+
+    request.end()
 
     request.on "error", (err) ->
       logger.error "Chatwork request error: #{err}"
